@@ -49,6 +49,19 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           envs: BOT_TOKEN,GROUP_ID,MESSAGE_THREAD_ID,GITHUB_SHA,DOCKERHUB_USERNAME
           script: |
+            # Проверяем и устанавливаем необходимые пакеты
+            if ! command -v docker &> /dev/null; then
+              echo "Docker не установлен. Установка..."
+              sudo apt-get update
+              sudo apt-get install -y docker.io
+            fi
+
+            if ! command -v curl &> /dev/null; then
+              echo "Curl не установлен. Установка..."
+              sudo apt-get update
+              sudo apt-get install -y curl
+            fi
+            
             # Создаем директорию если её нет
             mkdir -p ~/test-bot
             
@@ -71,6 +84,8 @@ jobs:
             
             # Устанавливаем docker compose если его нет
             if ! command -v docker-compose &> /dev/null; then
+              echo "Docker Compose не установлен. Установка..."
+              sudo mkdir -p /usr/local/bin
               sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
             fi
@@ -101,6 +116,19 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           envs: BOT_TOKEN,GROUP_ID,MESSAGE_THREAD_ID,GITHUB_SHA,DOCKERHUB_USERNAME
           script: |
+            # Проверяем и устанавливаем необходимые пакеты
+            if ! command -v docker &> /dev/null; then
+              echo "Docker не установлен. Установка..."
+              sudo apt-get update
+              sudo apt-get install -y docker.io
+            fi
+
+            if ! command -v curl &> /dev/null; then
+              echo "Curl не установлен. Установка..."
+              sudo apt-get update
+              sudo apt-get install -y curl
+            fi
+            
             # Создаем директорию если её нет
             mkdir -p ~/prod-bot
             
@@ -123,6 +151,8 @@ jobs:
             
             # Устанавливаем docker compose если его нет
             if ! command -v docker-compose &> /dev/null; then
+              echo "Docker Compose не установлен. Установка..."
+              sudo mkdir -p /usr/local/bin
               sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
             fi
