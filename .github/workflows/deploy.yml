@@ -42,17 +42,38 @@ jobs:
           GROUP_ID: ${{ secrets.GROUP_ID }}
           MESSAGE_THREAD_ID: ${{ secrets.MESSAGE_THREAD_ID }}
           GITHUB_SHA: ${{ github.sha }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          envs: BOT_TOKEN,GROUP_ID,MESSAGE_THREAD_ID,GITHUB_SHA
+          envs: BOT_TOKEN,GROUP_ID,MESSAGE_THREAD_ID,GITHUB_SHA,DOCKERHUB_USERNAME
           script: |
+            # Создаем директорию если её нет
+            mkdir -p ~/test-bot
+            
+            # Создаем docker-compose.yml
+            cat > ~/test-bot/docker-compose.yml << EOL
+            version: '3.8'
+            
+            services:
+              bot:
+                image: ${DOCKERHUB_USERNAME}/vash-nash-bot:${GITHUB_SHA}
+                env_file: .env
+                restart: unless-stopped
+            EOL
+            
             # Создаем или обновляем .env файл
             echo "BOT_TOKEN=$BOT_TOKEN" > ~/test-bot/.env
             echo "GROUP_ID=$GROUP_ID" >> ~/test-bot/.env
             echo "MESSAGE_THREAD_ID=$MESSAGE_THREAD_ID" >> ~/test-bot/.env
             echo "GITHUB_SHA=$GITHUB_SHA" >> ~/test-bot/.env
+            
+            # Устанавливаем docker compose если его нет
+            if ! command -v docker-compose &> /dev/null; then
+              sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
             
             cd ~/test-bot
             docker-compose pull
@@ -73,17 +94,38 @@ jobs:
           GROUP_ID: ${{ secrets.GROUP_ID }}
           MESSAGE_THREAD_ID: ${{ secrets.MESSAGE_THREAD_ID }}
           GITHUB_SHA: ${{ github.sha }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          envs: BOT_TOKEN,GROUP_ID,MESSAGE_THREAD_ID,GITHUB_SHA
+          envs: BOT_TOKEN,GROUP_ID,MESSAGE_THREAD_ID,GITHUB_SHA,DOCKERHUB_USERNAME
           script: |
+            # Создаем директорию если её нет
+            mkdir -p ~/prod-bot
+            
+            # Создаем docker-compose.yml
+            cat > ~/prod-bot/docker-compose.yml << EOL
+            version: '3.8'
+            
+            services:
+              bot:
+                image: ${DOCKERHUB_USERNAME}/vash-nash-bot:${GITHUB_SHA}
+                env_file: .env
+                restart: unless-stopped
+            EOL
+            
             # Создаем или обновляем .env файл
             echo "BOT_TOKEN=$BOT_TOKEN" > ~/prod-bot/.env
             echo "GROUP_ID=$GROUP_ID" >> ~/prod-bot/.env
             echo "MESSAGE_THREAD_ID=$MESSAGE_THREAD_ID" >> ~/prod-bot/.env
             echo "GITHUB_SHA=$GITHUB_SHA" >> ~/prod-bot/.env
+            
+            # Устанавливаем docker compose если его нет
+            if ! command -v docker-compose &> /dev/null; then
+              sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
             
             cd ~/prod-bot
             docker-compose pull
