@@ -98,8 +98,9 @@ jobs:
     needs: [build, deploy-test]
     runs-on: ubuntu-latest
     environment:
-      name: production
+      name: prod
       url: https://t.me/your_bot_username
+      manual: true
     
     steps:
       - name: Deploy to production server
