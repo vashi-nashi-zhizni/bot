@@ -128,8 +128,7 @@ jobs:
     environment:
       name: production
       url: https://t.me/Vash_Nash_bot
-      manual: true
-    
+
     steps:
       - name: Deploy to production server
         uses: appleboy/ssh-action@master
