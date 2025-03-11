@@ -1,0 +1,101 @@
+name: Deploy Bot
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-test:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: test
+    
+    steps:
+      - name: Deploy to test server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            # Создаем или обновляем .env файл
+            echo "BOT_TOKEN=${{ secrets.TEST_BOT_TOKEN }}" > ~/test-bot/.env
+            echo "GROUP_ID=${{ secrets.TEST_GROUP_ID }}" >> ~/test-bot/.env
+            echo "MESSAGE_THREAD_ID=${{ secrets.TEST_MESSAGE_THREAD_ID }}" >> ~/test-bot/.env
+            
+            # Обновляем docker-compose.yml
+            cat > ~/test-bot/docker-compose.yml << 'EOL'
+            version: '3.8'
+            services:
+              bot:
+                image: ghcr.io/${{ github.repository }}:${{ github.sha }}
+                env_file: .env
+                restart: unless-stopped
+                container_name: test-bot
+            EOL
+            
+            # Запускаем контейнер
+            cd ~/test-bot
+            docker-compose pull
+            docker-compose up -d
+
+  deploy-prod:
+    needs: [build, deploy-test]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://t.me/your_bot_username  # Замените на username вашего бота
+    
+    steps:
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            # Создаем или обновляем .env файл
+            echo "BOT_TOKEN=${{ secrets.PROD_BOT_TOKEN }}" > ~/prod-bot/.env
+            echo "GROUP_ID=${{ secrets.PROD_GROUP_ID }}" >> ~/prod-bot/.env
+            echo "MESSAGE_THREAD_ID=${{ secrets.PROD_MESSAGE_THREAD_ID }}" >> ~/prod-bot/.env
+            
+            # Обновляем docker-compose.yml
+            cat > ~/prod-bot/docker-compose.yml << 'EOL'
+            version: '3.8'
+            services:
+              bot:
+                image: ghcr.io/${{ github.repository }}:${{ github.sha }}
+                env_file: .env
+                restart: unless-stopped
+                container_name: prod-bot
+            EOL
+            
+            # Запускаем контейнер
+            cd ~/prod-bot
+            docker-compose pull
+            docker-compose up -d 

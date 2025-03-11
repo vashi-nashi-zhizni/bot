@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - GROUP_ID=${GROUP_ID}
+      - MESSAGE_THREAD_ID=${MESSAGE_THREAD_ID}
+    restart: unless-stopped 
