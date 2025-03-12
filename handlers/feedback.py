@@ -1,27 +1,27 @@
 from aiogram import types, Bot, Dispatcher
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from states.forms import FeedbackState
+from states.forms import FeedbackForm
 from config.config import GROUP_ID, MESSAGE_THREAD_ID
 import logging
 
 def register_feedback_handlers(dp: Dispatcher):
     dp.message.register(start_feedback, Command('feedback'))
     dp.message.register(request_media_for_feedback, 
-                       FeedbackState.waiting,
+                       FeedbackForm.waiting,
                        lambda message: message.text == "Добавить медиа")
     dp.message.register(process_feedback_text,
-                       FeedbackState.waiting,
+                       FeedbackForm.waiting,
                        lambda message: message.text != "Добавить медиа")
     dp.message.register(process_feedback_with_media,
-                       FeedbackState.media_processing,
+                       FeedbackForm.media_processing,
                        lambda message: message.video or message.audio or 
                                      message.video_note or message.voice)
     dp.message.register(process_feedback_media_fallback,
-                       FeedbackState.media_processing)
+                       FeedbackForm.media_processing)
 
 async def start_feedback(message: types.Message, state: FSMContext):
-    await state.set_state(FeedbackState.waiting)
+    await state.set_state(FeedbackForm.waiting)
     markup = types.ReplyKeyboardMarkup(
         keyboard=[
             [types.KeyboardButton(text="Отправить без медиа")],
@@ -33,7 +33,7 @@ async def start_feedback(message: types.Message, state: FSMContext):
     await message.answer("Пожалуйста, напишите ваш отзыв:", reply_markup=markup)
 
 async def request_media_for_feedback(message: types.Message, state: FSMContext):
-    await state.set_state(FeedbackState.media_processing)
+    await state.set_state(FeedbackForm.media_processing)
     await message.answer(
         "Пожалуйста, отправьте ваше видео, аудио, голосовое сообщение или круговое видео:",
         reply_markup=types.ReplyKeyboardRemove()

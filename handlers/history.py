@@ -1,27 +1,27 @@
 from aiogram import types, Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from states.forms import HistoryState
+from states.forms import HistoryForm
 from config.config import GROUP_ID, MESSAGE_THREAD_ID
 import logging
 
 def register_history_handlers(dp: Dispatcher):
     dp.message.register(start_history, Command('history'))
     dp.message.register(request_media_for_history,
-                       HistoryState.waiting,
+                       HistoryForm.waiting,
                        lambda message: message.text == "Добавить медиа")
     dp.message.register(process_history_text,
-                       HistoryState.waiting,
+                       HistoryForm.waiting,
                        lambda message: message.text != "Добавить медиа")
     dp.message.register(process_history_with_media,
-                       HistoryState.media_processing,
+                       HistoryForm.media_processing,
                        lambda message: message.video or message.audio or 
                                      message.video_note or message.voice)
     dp.message.register(process_history_media_fallback,
-                       HistoryState.media_processing)
+                       HistoryForm.media_processing)
 
 async def start_history(message: types.Message, state: FSMContext):
-    await state.set_state(HistoryState.waiting)
+    await state.set_state(HistoryForm.waiting)
     markup = types.ReplyKeyboardMarkup(
         keyboard=[
             [types.KeyboardButton(text="Отправить без медиа")],
@@ -37,7 +37,7 @@ async def start_history(message: types.Message, state: FSMContext):
     )
 
 async def request_media_for_history(message: types.Message, state: FSMContext):
-    await state.set_state(HistoryState.media_processing)
+    await state.set_state(HistoryForm.media_processing)
     await message.answer(
         "Пожалуйста, отправьте ваше видео, аудио, голосовое сообщение или круговое видео:",
         reply_markup=types.ReplyKeyboardRemove()
