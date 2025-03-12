@@ -10,7 +10,7 @@ try:
     GROUP_ID = int(os.getenv("GROUP_ID", "0"))
     MESSAGE_THREAD_ID = int(os.getenv("MESSAGE_THREAD_ID", "0"))
 except ValueError:
-    raise ValueError("GROUP_ID and MESSAGE_THREAD_ID must be valid integers")
+    raise ValueError("GROUP_ID и MESSAGE_THREAD_ID должны быть целыми числами")
 
 if GROUP_ID == 0:
     raise ValueError("GROUP_ID environment variable is not set")
