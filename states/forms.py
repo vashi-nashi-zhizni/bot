@@ -2,15 +2,15 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram import Dispatcher
 
 class FeedbackForm(StatesGroup):
-    waiting = State()          # Для ожидания начального текста отзыва
+    collecting = State()       # Для сбора сообщений
     media_processing = State() # Для обработки медиафайлов
 
 class QuestionState(StatesGroup):
-    waiting = State()
-    media_processing = State()
+    collecting = State()       # Для сбора сообщений
+    media_processing = State() # Для обработки медиафайлов
 
 class HistoryForm(StatesGroup):
-    waiting = State()          # Для ожидания начального текста истории
+    collecting = State()       # Для сбора сообщений
     media_processing = State() # Для обработки медиафайлов
 
 class ExpertForm(StatesGroup):
