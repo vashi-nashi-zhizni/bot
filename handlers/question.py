@@ -7,8 +7,14 @@ import logging
 
 def register_question_handlers(dp: Dispatcher):
     dp.message.register(start_question, Command('question'))
-    dp.message.register(process_question_message, QuestionState.collecting)
-    dp.message.register(process_question_media, QuestionState.media_processing)
+    dp.message.register(process_question_message, 
+                       QuestionState.collecting,
+                       lambda message: message.text and message.text != "/delete")
+    dp.message.register(process_question_media, 
+                       QuestionState.collecting,
+                       lambda message: message.photo or message.video or 
+                                     message.voice or message.video_note or 
+                                     message.audio)
     dp.callback_query.register(handle_question_callback, QuestionState.collecting)
 
 async def start_question(message: types.Message, state: FSMContext):
@@ -77,6 +83,9 @@ async def process_question_media(message: types.Message, state: FSMContext):
     elif message.video_note:
         message_data["type"] = "video_note"
         message_data["file_id"] = message.video_note.file_id
+    elif message.audio:
+        message_data["type"] = "audio"
+        message_data["file_id"] = message.audio.file_id
     
     messages.append(message_data)
     await state.update_data(messages=messages)
@@ -134,6 +143,13 @@ async def handle_question_callback(callback_query: types.CallbackQuery, state: F
                     await callback_query.bot.send_video_note(
                         GROUP_ID,
                         msg["file_id"],
+                        message_thread_id=MESSAGE_THREAD_ID
+                    )
+                elif msg["type"] == "audio":
+                    await callback_query.bot.send_audio(
+                        GROUP_ID,
+                        msg["file_id"],
+                        caption=header + (msg["caption"] or ""),
                         message_thread_id=MESSAGE_THREAD_ID
                     )
             except Exception as e:
